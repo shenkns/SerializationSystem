@@ -1,18 +1,20 @@
-﻿// Copyright shenkns Serialization System Developed With Unreal Engine. All Rights Reserved 2022.
+﻿// Copyright shenkns Serialization System Developed With Unreal Engine. All Rights Reserved 2023.
 
 #pragma once
 
+#include "Log.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "Interfaces/SerializationInterface.h"
+#include "Log/Details/LocalLogCategory.h"
 #include "Serialization/MemoryReader.h"
 #include "Serialization/MemoryWriter.h"
 #include "Serialization/ObjectAndNameAsStringProxyArchive.h"
-#include "LogSystem.h"
 
 #include "SerializationSystemLibrary.generated.h"
 
 SERIALIZATIONSYSTEM_API DECLARE_LOG_CATEGORY_EXTERN(LogSerializationSystem, Log, All);
+DEFINE_LOG_CATEGORY_LOCAL(LogSerializationSystem);
 
 USTRUCT(BlueprintType)
 struct FObjectSaveData
@@ -68,7 +70,7 @@ bool USerializationSystemLibrary::ConvertObjectToSaveData(T* Object, FObjectSave
 	UObject* InterfaceObject = static_cast<UObject*>(Object);
 	if(!InterfaceObject) return false;
 	
-	LOG_STATIC(LogSerializationSystem, "%s Serialization Started", *InterfaceObject->GetName())
+	LOG(Display, "{} Serialization Started", InterfaceObject);
 
 	if(InterfaceObject->GetClass()->ImplementsInterface(USerializationInterface::StaticClass()))
 	{
@@ -82,7 +84,7 @@ bool USerializationSystemLibrary::ConvertObjectToSaveData(T* Object, FObjectSave
 
 	SaveData.ObjectClass = InterfaceObject->GetClass();
 
-	LOG_STATIC(LogSerializationSystem, "%s Serialized Successful", *InterfaceObject->GetName())
+	LOG(Display, "{} Serialized Successful", InterfaceObject);
 
 	return true;
 }
@@ -101,11 +103,11 @@ bool USerializationSystemLibrary::ConvertObjectsToSaveData(TArray<T*>& Objects, 
 		{
 			SaveData.Add(ObjectSaveData);
 			
-			LOG_STATIC(LogSerializationSystem, "Serialized %d%s Of Objects", FMath::CeilToInt((float)(i + 1) / (float)Objects.Num() * 100.f), TEXT("%"))
+			LOG(Display, "Serialized {}% Of Objects", FMath::CeilToInt((float)(i + 1) / (float)Objects.Num() * 100.f));
 		}
 	}
 
-	LOG_STATIC(LogSerializationSystem, "%d Objects Serialized Successful", SaveData.Num())
+	LOG(Display, "{} Objects Serialized Successful", SaveData.Num());
         
 	return SaveData.Num() == Objects.Num();
 }
@@ -117,7 +119,7 @@ T* USerializationSystemLibrary::ConvertSaveDataToObject(const FObjectSaveData& S
 
 	if(UObject* Object = NewObject<T>(ObjectOuter, SaveData.ObjectClass))
 	{
-		LOG_STATIC(LogSerializationSystem, "%s Deserialization Started", *Object->GetName())
+		LOG(Display, "{} Deserialization Started", Object);
 		
 		FMemoryReader Reader(SaveData.BinaryData);
 		FObjectAndNameAsStringProxyArchive Archive(Reader, true);
@@ -131,7 +133,7 @@ T* USerializationSystemLibrary::ConvertSaveDataToObject(const FObjectSaveData& S
 
 		if(Object)
 		{
-			LOG_STATIC(LogSerializationSystem, "%s Deserialized Successful", *Object->GetName())
+			LOG(Display, "{} Deserialized Successful", Object);
 			return static_cast<T*>(Object);
 		}
 
@@ -152,11 +154,11 @@ TArray<T*> USerializationSystemLibrary::ConvertSaveDataToObjects(const TArray<FO
 		{
 			Objects.Add(Object);
 
-			LOG_STATIC(LogSerializationSystem, "Deserialized %d%s Of Objects", FMath::CeilToInt((float)(i + 1) / (float)SaveData.Num() * 100.f), TEXT("%"))
+			LOG(Display, "Deserialized {}% Of Objects", FMath::CeilToInt((float)(i + 1) / (float)SaveData.Num() * 100.f));
 		}
 	}
-
-	LOG_STATIC(LogSerializationSystem, "%d Objects Deserialized Successful", Objects.Num())
+	
+	LOG(Display, "{} Objects Deserialized Successful", Objects.Num());
 
 	return Objects;
 }
